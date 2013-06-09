@@ -1,3 +1,6 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
+import net.sf.sahi.Proxy;
+import net.sf.sahi.config.Configuration;
 import register.QQRegister;
 
 import java.util.ArrayList;
@@ -9,12 +12,24 @@ import java.util.concurrent.Future;
 
 /**
  * User: Dong ai hua
- * Date: 13-5-30
- * Time: 上午10:36
+ * Date: 13-st5-30
+ * Time: 上午0:36
  * To change this template use File | Settings | File Templates.
  */
 public class Entrance   {
-    public static void main(String[] args) {
+    private static Proxy proxy = new Proxy(9999);
+    private static String sahiBase = "/home/jackie/sahi"; // where Sahi is installed or unzipped
+    private static String userDataDirectory = "/home/jackie/sahi/userdata"; //path to the userdata directory
+
+    public static void main(String[] args) throws InterruptedException {
+        Configuration.initJava(sahiBase, userDataDirectory);
+        proxy.start(true);
+        Thread.sleep(3000);  // waiting proxy is starting
+
+
+
+
+
         ExecutorService executorService = Executors.newCachedThreadPool();
         List<Future<Object>> resultList = new ArrayList<Future<Object>>();
 

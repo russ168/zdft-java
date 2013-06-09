@@ -1,8 +1,16 @@
 package register;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import net.sf.sahi.Proxy;
 import net.sf.sahi.client.Browser;
 import net.sf.sahi.config.Configuration;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 
 /**
@@ -13,29 +21,59 @@ import java.util.concurrent.Callable;
  */
 public class QQRegister implements Callable<Object> {
     private String name;
+    private static ObjectMapper objectMapper = new ObjectMapper();
+    private static String browserType = "chrome";
 
     public QQRegister(String name) {
         this.name = name;
     }
 
     public String call()  throws Exception{
-        //String sahiBase = "C:\\Users\\Administrator\\sahi"; // where Sahi is installed or unzipped
-        //String userDataDirectory = "C:\\Users\\Administrator\\sahi\\userdata"; //path to the userdata directory
-        String sahiBase = "/home/jackie/sahi"; // where Sahi is installed or unzipped
-        String userDataDirectory = "/home/jackie/sahi/userdata"; //path to the userdata directory
+        return "123";
+    }
 
-        Configuration.initJava(sahiBase, userDataDirectory);
-        // Sets up configuration for proxy. Sets Controller to java mode.
-        String QQnumber;
-        String browserType = "chrome";
 
-        // You can specify the browser you want to run the tests on.
-        // browserType can take any value defined in
-        // sahi/userdata/config/browser_types.xml
+    public void changeProxy() throws Exception {
+        File file = new File("/home/jackie/scripts/scanProxies/items.jl");
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            String tempString = null;
+            int line = 1;
+            while ((tempString = reader.readLine()) != null) {
+                System.out.println("line " + line + ": " + tempString);
+                line++;
+                //parse line as json object
 
-        // Create a browser and open it
+                Map<String, Map<String, Object>> maps = objectMapper.readValue(tempString, Map.class);
+                Properties systemProperties = System.getProperties();
+                Boolean isHttpProxyEnabled = true;
+                if (isHttpProxyEnabled) {
+                    systemProperties.setProperty("http.proxyHost", String.valueOf(maps.get("host")));
+                    systemProperties.setProperty("http.proxyPort", String.valueOf(maps.get("port")));
+                    //systemProperties.setProperty("http.proxyHost", "91.230.54.60");
+                    //systemProperties.setProperty("http.proxyPort", "8080");
+
+                    //systemProperties.setProperty("http.nonProxyHosts", "" + getHttpNonProxyHosts());
+                    connect();
+                }
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e1) {
+                }
+            }
+        }
+
+    }
+
+    private void connect() {
         Browser browser = new Browser(browserType);
-
         browser.open();
 
         browser.navigateTo("http://zc.qq.com/");
@@ -55,15 +93,13 @@ public class QQRegister implements Callable<Object> {
         browser.textbox("province_value").setValue("Beijing");
         browser.textbox("city_value").setValue("Dongcheng");
 
-
-
         browser.textbox("code").setValue("123");
 
         browser.submit(0).click();
 
-        QQnumber = browser.popup("_blank").span("defaultUin").getValue();
+        String QQnumber = browser.popup("_blank").span("defaultUin").getValue();
         System.out.println(QQnumber);
+
         browser.close();
-        return "OK";
     }
 }

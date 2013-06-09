@@ -15,25 +15,47 @@ import java.util.Properties;
  * Time: 上午11:33
  * To change this template use File | Settings | File Templates.
  */
-public class Proxy {
+public class ZdftProxy {
+    public String proxyFilePath;
+    public ArrayList<Tuple<String, String>> proxyList = new ArrayList<Tuple<String, String>>(50);
+    private int index = 0;
 
-    public void setHttpProxy(String host, String port ) throws Exception{
+
+    public ZdftProxy(String proxyFilePath) throws Exception{
+        this.proxyFilePath = proxyFilePath;
+        parse();
+    }
+
+    public int size() {
+        return proxyList.size();
+    }
+
+    public Tuple<String, String> get(int i) {
+        if(i >= proxyList.size()) return null;
+        return proxyList.get(i);
+    }
+
+    public Tuple<String, String> getNext() {
+        if(index == proxyList.size()) return null;
+        return proxyList.get(index++);
+    }
+
+    public static void setHttpProxy(String host, String port ) throws Exception{
         Properties systemProperties = System.getProperties();
         systemProperties.setProperty("http.proxyHost", host);
         systemProperties.setProperty("http.proxyPort", port);
         //systemProperties.setProperty("http.nonProxyHosts", "" + getHttpNonProxyHosts());
     }
 
-    public List<Map<String, Map<String, Object>>> parse(String filePath) {
-        List list = new ArrayList(50);
-        File file = new File(filePath);
+    private void parse() {
+        File file = new File(proxyFilePath);
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(file));
             String tempString = null;
             while ((tempString = reader.readLine()) != null) {
                 Map<String, Map<String, Object>> map = Json.parse(tempString);
-                list.add(map);
+                proxyList.add(new Tuple<String, String>(String.valueOf(map.get("host")), String.valueOf(map.get("port"))));
             }
             reader.close();
         } catch (IOException e) {
@@ -46,7 +68,14 @@ public class Proxy {
                 }
             }
         }
-        return list;
     }
 
+    public class Tuple<X, Y> {
+        public final X x;
+        public final Y y;
+        public Tuple(X x, Y y) {
+            this.x = x;
+            this.y = y;
+        }
+    }
 }
