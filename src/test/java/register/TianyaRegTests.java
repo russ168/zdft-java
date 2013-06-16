@@ -21,7 +21,7 @@ import java.util.Map;
  * Time: 5:52 AM
  * To change this template use File | Settings | File Templates.
  */
-public class ZdftRegisterIntegretionTests {
+public class TianyaRegTests {
     private Proxy proxy;
     private String sahiBase = "/home/jackie/java/projects/sahi"; // where Sahi is installed or unzipped
     private String userDataDirectory = "/home/jackie/java/projects/sahi/userdata"; //path to the userdata directory
@@ -37,9 +37,6 @@ public class ZdftRegisterIntegretionTests {
 
     private DBAdapter dbAdapter;
 
-
-
-
     @BeforeClass
     public void startSahiProxy() throws Exception {
         Configuration.initJava(sahiBase, userDataDirectory);
@@ -47,7 +44,8 @@ public class ZdftRegisterIntegretionTests {
         //proxy.start(true);
         //Thread.sleep(3000);  // waiting proxy is starting
 
-        names= NameDict.ngram("abcdefghijklmnopqrstuvwxyz", 4, 6);
+        names= NameDict.ngram("abcdefghijklmnopqrstuvwxyz", 6, 8);
+
         //zdftProxy = new ZdftProxy(proxyFile);
         dbAdapter = new DBAdapter();
 
@@ -72,16 +70,32 @@ public class ZdftRegisterIntegretionTests {
 
         //browser.addHttpHeader("Cache-control", "no-cache");
 
-        browser.navigateTo("http://localhost:8001/static/register.html");
-        //browser.navigateTo("http://www.baidu.com");
-        // Datafill name
-        String prefix = names.get(0);
-        String suffix = NameDict.genSuffix(3, "0123456789");
-        String name = prefix + suffix;
-        browser.textbox("name").setValue(name);
+        browser.navigateTo("http://passport.tianya.cn/register/");
+
+        String name;
+
+        for(int i=0, len=names.size(); i<len; i++) {
+            String prefix = names.get(i);
+            String suffix = NameDict.genSuffix(3, "0123456789");
+            name = prefix + suffix;
+            browser.textbox("userName").setValue(name);
+            browser.textbox("password").focus();
+
+            if(browser.exists(browser.image("wrong.gif"))){
+                System.out.println("name is used by others, try to find another name...");
+                continue;
+            } else {
+                System.out.println("Find a good name:" + name);
+                break;
+            }
+        }
+
+        browser.password("password").setValue("I5youyouyou");
+        browser.password("password2").setValue("I5youyouyou");
+        browser.textbox("email").setValue("2352296163@qq.com");
 
         // Get Captcha image
-        String imgUrl = browser.image("captcha.jpg").getAttribute("src");
+        String imgUrl = browser.image("vcodeImg").getAttribute("src");
         System.out.println("image address is:" + imgUrl);
 
         // Send request and decode Captcha
@@ -89,20 +103,24 @@ public class ZdftRegisterIntegretionTests {
         System.out.println("cached image file is:" + imgFile);
 
         String code = dbAdapter.parseCaptcha("http://localhost:8001/ocr/parse", imgFile);
-        browser.textbox("code").setValue(code);
+
+        browser.textbox("vcode").setValue(code);
 
         browser.submit(0).click();
 
-        Browser browser2 =  browser.popup("Result");
+        /*
+        Browser browser2 =  browser.popup("激活账号_天涯社区");
         String result = browser2.div("number").getText();
         System.out.println("QQ number is:" + result);
-
-        // Save result to database
-        dbAdapter.saveQQ(result, "12345678");
-
         browser2.close();
+        */
 
         browser.close();
+
+        // Save result to database
+
+        //dbAdapter.save(name, password, email);
+
     }
 
 }

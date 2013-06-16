@@ -30,15 +30,20 @@ public class DBAdapter {
     private String user;
     private String password;
     private Map<String, String> options;
-
-    private MongoClient mongoClient;
+    MongoClient mongoClient;
 
     public DBAdapter(String type, String host, int port) throws UnknownHostException {
+        this.type = "mongodb";
+        this.host = host;
+        this.port = port;
         mongoClient = new MongoClient(host, port);
     }
 
     public DBAdapter() throws UnknownHostException {
-        mongoClient = new MongoClient("localhost", 27017);
+        this.type = "mongodb";
+        this.host = "localhost";
+        this.port = 27017;
+        mongoClient = new MongoClient(host, port);
     }
 
     public void close() {
@@ -54,8 +59,7 @@ public class DBAdapter {
         if (cursor.hasNext()) {
             DBObject result = cursor.next();
             cursor.close();
-            mongoClient.close();
-            return result.get("filePath").toString();
+            return (String) result.get("filepath");
         } else {
             cursor.close();
             return"";
@@ -63,14 +67,14 @@ public class DBAdapter {
 
     }
 
-    public String parseCaptcha(String parseUrl, String imageUrl) throws Exception {
+    public String parseCaptcha(String parseUrl, String imageFile) throws Exception {
         HttpClient htttpClient = new DefaultHttpClient();
         HttpPost httpPost = new HttpPost(parseUrl);
 
         MultipartEntity reqEntity = new MultipartEntity();
         httpPost.setEntity(reqEntity);
 
-        FileBody bin = new FileBody(new File("temp"));
+        FileBody bin = new FileBody(new File(imageFile));
         reqEntity.addPart("Filedata", bin);
 
         System.out.println("executing: " + httpPost.getRequestLine());
